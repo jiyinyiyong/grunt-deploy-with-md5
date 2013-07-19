@@ -1,0 +1,30 @@
+{
+  "name": "grunt-deploy-with-md5",
+  "version": "0.0.1",
+  "description": "copy files for CDN and update the time stamps",
+  "main": "Gruntfile.coffee",
+  "dependencies": {
+    "grunt": "~0.4.1",
+    "moment": "~2.1.0"
+  },
+  "devDependencies": {
+    "grunt-contrib-coffee": "~0.7.0",
+    "grunt": "~0.4.1"
+  },
+  "scripts": {
+    "test": "grunt test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:jiyinyiyong/grunt-deploy-with-md5.git"
+  },
+  "keywords": [
+    "copy",
+    "cdn"
+  ],
+  "author": "jiyinyiyong",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jiyinyiyong/grunt-deploy-with-md5/issues"
+  }
+}
