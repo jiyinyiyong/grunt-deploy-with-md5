@@ -28,12 +28,14 @@ module.exports = function(grunt) {
   return grunt.registerMultiTask('deploy-with-md5', 'mine', function() {
     var _this = this;
     return this.files.map(function(item) {
-      var oldFiles;
+      var md5List, oldFiles;
       oldFiles = fs.readdirSync(item.dest);
-      return item.src.map(function(relativeFile) {
-        var appName, expectName, extName, match, md5, newName, newRegexp, oldBasename, pattern;
+      md5List = [];
+      item.src.map(function(relativeFile) {
+        var appName, extName, match, md5, newName, newRegexp, oldBasename, pattern;
         grunt.log.writeln('now file:', relativeFile);
         md5 = MD5(grunt.file.read(relativeFile));
+        md5List.push(md5);
         if (!(oldFiles.some(function(name) {
           return matchName(name, md5);
         }))) {
@@ -44,28 +46,23 @@ module.exports = function(grunt) {
           extName = match[3];
           pattern = "" + (excapeDot(appName)) + "(\\d{8}-[0-9a-f]{32})?\\." + extName;
           newRegexp = new RegExp(pattern);
-          grunt.log.writeln('the newRegexp:', newRegexp);
-          expectName = void 0;
-          oldFiles.map(function(name) {
-            grunt.log.writeln('the name %s, the expgex', name, pattern);
-            if (name.match(newRegexp) != null) {
-              return expectName = name;
-            }
-          });
           newName = "" + appName + (makeDate()) + "-" + md5 + "." + extName;
           grunt.file.copy(relativeFile, path.join(item.dest, newName));
-          if (expectName != null) {
-            grunt.file["delete"](path.join(item.dest, expectName));
-          }
-          grunt.log.writeln('the expectName:', expectName);
           return _this.data.html.map(function(name) {
             var content;
             grunt.log.writeln('doing html:', name);
-            console.log(newRegexp);
             content = grunt.file.read(name);
             content = content.replace(newRegexp, newName);
             return grunt.file.write(name, content);
           });
+        }
+      });
+      return oldFiles.map(function(name) {
+        if (!(md5List.some(function(md5) {
+          return matchName(name, md5);
+        }))) {
+          grunt.log.writeln('deleting file:', name);
+          return grunt.file["delete"](path.join(item.dest, name));
         }
       });
     });

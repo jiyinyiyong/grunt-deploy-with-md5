@@ -44,4 +44,5 @@ module.exports = (grunt) ->
       # delete one that not used
       oldFiles.map (name) ->
         unless (md5List.some (md5) -> matchName name, md5)
-        grunt.file.delete (path.join item.dest, name)
+          grunt.log.writeln 'deleting file:', name
+          grunt.file.delete (path.join item.dest, name)
