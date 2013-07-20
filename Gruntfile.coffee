@@ -1,6 +1,6 @@
 
 module.exports = (grunt) ->
-  
+
   options =
     coffee:
       compile:
@@ -23,5 +23,5 @@ module.exports = (grunt) ->
 
   grunt.task.loadTasks 'tasks'
 
-  grunt.registerTask 'default', ['coffee:compile']
+  grunt.registerTask 'build', ['coffee:compile']
   grunt.registerTask 'test', ['deploy-with-md5:demo']
