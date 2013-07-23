@@ -16,10 +16,15 @@ module.exports = (grunt) ->
         html: [
           'test/html/a.html'
         ]
+    watch:
+      coffee:
+        files: ['coffee/*']
+        tasks: ['coffee', 'test']
 
   grunt.initConfig options
 
   grunt.loadNpmTasks 'grunt-contrib-coffee'
+  grunt.loadNpmTasks 'grunt-contrib-watch'
 
   grunt.task.loadTasks 'tasks'
 

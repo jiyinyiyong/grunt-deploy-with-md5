@@ -9,7 +9,8 @@
   },
   "devDependencies": {
     "grunt-contrib-coffee": "~0.7.0",
-    "grunt": "~0.4.1"
+    "grunt": "~0.4.1",
+    "grunt-contrib-watch": "~0.5.1"
   },
   "scripts": {
     "test": "grunt test"
