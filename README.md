@@ -46,6 +46,9 @@ Also it will update the MD5 string in the given HTML files.
 This plugin is not will tested.
 Be sure to know [Grunt][wiki] when you want to use this plugin.
 
+The logic of dealing with HTML updating and old file cleaning is not robust.  
+This part is supposed to be buggy at the moment :(
+
 [wiki]: https://github.com/gruntjs/grunt/wiki
 
 ### License
