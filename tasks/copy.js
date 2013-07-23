@@ -1,4 +1,5 @@
-var MD5, excapeDot, filenameRegexp, fs, makeDate, matchName, moment, path;
+var MD5, excapeDot, filenamePattern, fs, makeDate, matchName, moment, path,
+  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 moment = require('moment');
 
@@ -8,7 +9,7 @@ path = require('path');
 
 fs = require('fs');
 
-filenameRegexp = /^([\w\.]{3,10}\.)(\d{8}-[\w\d]{32}\.)?(\w{2,6})$/;
+filenamePattern = /^([\w\.]{3,10}\.)(\d{8}-[\w\d]{32}\.)?(\w{2,6})$/;
 
 makeDate = function() {
   return moment().utc().format('MMDDHHmm');
@@ -27,47 +28,49 @@ module.exports = function(grunt) {
   return grunt.registerMultiTask('deploy-with-md5', 'update time and md5 in filenames', function() {
     var _this = this;
     return this.files.map(function(item) {
-      var md5List, oldFiles;
-      grunt.log.debug('for dest: "%s"', item.dest);
-      oldFiles = fs.readdirSync(item.dest);
-      md5List = [];
-      item.src.map(function(relativeFile) {
-        var appName, extName, match, md5, newName, newPathName, newRegexp, oldBasename, pattern;
-        grunt.log.debug('found file: "%s"', relativeFile);
-        md5 = MD5(grunt.file.read(relativeFile));
-        md5List.push(md5);
-        oldBasename = path.basename(relativeFile);
-        match = oldBasename.match(filenameRegexp);
+      var currentBasenameList, oldBasenameList, srcMD5List;
+      grunt.log.writeln('for dest: "%s"', item.dest);
+      oldBasenameList = fs.readdirSync(item.dest);
+      srcMD5List = [];
+      currentBasenameList = [];
+      item.src.map(function(srcPathname) {
+        var appName, extName, match, md5, newRegexp, oldBasename, pattern, pickName, pickPathname, srcBasename, theOldBasepath;
+        grunt.log.writeln('found file: "%s"', srcPathname);
+        md5 = MD5(grunt.file.read(srcPathname));
+        srcMD5List.push(md5);
+        srcBasename = path.basename(srcPathname);
+        match = srcBasename.match(filenamePattern);
         appName = match[1];
         extName = match[3];
         pattern = "" + (excapeDot(appName)) + "(\\d{8}-[0-9a-f]{32})?\\." + extName;
         newRegexp = new RegExp(pattern, 'g');
-        newName = "" + appName + (makeDate()) + "-" + md5 + "." + extName;
-        newPathName = path.join(item.dest, newName);
-        console.log('generated RegExp:', newRegexp);
-        grunt.log.ok('updating html using: "%s"', newName);
-        _this.data.html.map(function(name) {
-          var content;
-          content = grunt.file.read(name);
-          content = content.replace(newRegexp, newName);
-          return grunt.file.write(name, content);
-        });
-        if (oldFiles.some(function(name) {
+        pickName = "" + appName + (makeDate()) + "-" + md5 + "." + extName;
+        pickPathname = path.join(item.dest, pickName);
+        theOldBasepath = oldBasenameList.filter(function(name) {
           return matchName(name, md5);
-        })) {
-          return grunt.log.ok('file "%s" is not modified', relativeFile);
+        })[0];
+        if (typeof theOldBasename !== "undefined" && theOldBasename !== null) {
+          oldBasename = path.basename(theOldBasepath);
+          grunt.log.ok('file "%s" is not modified', oldBasename);
+          pickName = oldBasename;
         } else {
-          grunt.log.ok('file "%s" changed, updating', relativeFile);
-          grunt.file.copy(relativeFile, newPathName);
-          return grunt.log.ok('generated file "%s"', newPathName);
+          grunt.log.writeln('file "%s" changed, updating', srcPathname);
+          grunt.file.copy(srcPathname, pickPathname);
+          grunt.log.ok('generated file "%s"', pickPathname);
         }
+        grunt.log.ok('updating html using: "%s"', pickName);
+        _this.data.html.map(function(htmlName) {
+          var content;
+          content = grunt.file.read(htmlName);
+          content = content.replace(newRegexp, pickName);
+          return grunt.file.write(htmlName, content);
+        });
+        return currentBasenameList.push(pickName);
       });
-      return oldFiles.map(function(name) {
+      return oldBasenameList.map(function(givenBasename) {
         var oldPathname;
-        if (!(md5List.some(function(md5) {
-          return matchName(name, md5);
-        }))) {
-          oldPathname = path.join(item.dest, name);
+        if (__indexOf.call(currentBasenameList, givenBasename) < 0) {
+          oldPathname = path.join(item.dest, givenBasename);
           grunt.log.warn('removing old file: "%s"', oldPathname);
           return grunt.file["delete"](oldPathname);
         }

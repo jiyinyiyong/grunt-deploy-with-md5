@@ -4,7 +4,7 @@ MD5 = require 'MD5'
 path = require 'path'
 fs = require 'fs'
 
-filenameRegexp = /^([\w\.]{3,10}\.)(\d{8}-[\w\d]{32}\.)?(\w{2,6})$/
+filenamePattern = /^([\w\.]{3,10}\.)(\d{8}-[\w\d]{32}\.)?(\w{2,6})$/
 
 makeDate = -> moment().utc().format('MMDDHHmm')
 matchName = (name, md5text) -> name.indexOf(md5text) >= 0
@@ -15,43 +15,50 @@ module.exports = (grunt) ->
 
   grunt.registerMultiTask 'deploy-with-md5', 'update time and md5 in filenames', ->
     @files.map (item) =>
-      grunt.log.debug 'for dest: "%s"', item.dest
+      grunt.log.writeln 'for dest: "%s"', item.dest
 
-      oldFiles = fs.readdirSync item.dest
-      md5List = []
+      oldBasenameList = fs.readdirSync item.dest
+      srcMD5List = []
 
-      item.src.map (relativeFile) =>
-        grunt.log.debug 'found file: "%s"', relativeFile
+      currentBasenameList = []
+
+      item.src.map (srcPathname) =>
+        grunt.log.writeln 'found file: "%s"', srcPathname
         # generate md5
-        md5 = MD5 grunt.file.read(relativeFile)
-        md5List.push md5
+        md5 = MD5 grunt.file.read srcPathname
+        srcMD5List.push md5
         # generate newName
-        oldBasename = path.basename relativeFile
-        match = oldBasename.match filenameRegexp
+        srcBasename = path.basename srcPathname
+        match = srcBasename.match filenamePattern
         appName = match[1]
         extName = match[3]
         pattern = "#{excapeDot appName}(\\d{8}-[0-9a-f]{32})?\\.#{extName}"
         newRegexp = new RegExp pattern, 'g'
+        # console.log 'generated RegExp:', newRegexp
         # generated RegExp
-        newName = "#{appName}#{makeDate()}-#{md5}.#{extName}"
-        newPathName = path.join item.dest, newName
-        console.log 'generated RegExp:', newRegexp
-        # update html with new name based pattern
-        grunt.log.ok 'updating html using: "%s"', newName
-        @data.html.map (name) =>
-          content = grunt.file.read name
-          content = content.replace newRegexp, newName
-          grunt.file.write name, content
+        pickName = "#{appName}#{makeDate()}-#{md5}.#{extName}"
+        pickPathname = path.join item.dest, pickName
         # if md5 is still there, don't change
-        if (oldFiles.some (name) -> matchName name, md5)
-          grunt.log.ok 'file "%s" is not modified', relativeFile
+        theOldBasepath = oldBasenameList.filter((name) -> matchName name, md5)[0]
+        if theOldBasename?
+          oldBasename = path.basename theOldBasepath
+          grunt.log.ok 'file "%s" is not modified', oldBasename
+          pickName = oldBasename
         else
-          grunt.log.ok 'file "%s" changed, updating', relativeFile
-          grunt.file.copy relativeFile, newPathName
-          grunt.log.ok 'generated file "%s"', newPathName
+          grunt.log.writeln 'file "%s" changed, updating', srcPathname
+          grunt.file.copy srcPathname, pickPathname
+          grunt.log.ok 'generated file "%s"', pickPathname
+        # update html with new name based pattern
+        grunt.log.ok 'updating html using: "%s"', pickName
+        @data.html.map (htmlName) =>
+          content = grunt.file.read htmlName
+          content = content.replace newRegexp, pickName
+          grunt.file.write htmlName, content
+        # record the names in use
+        currentBasenameList.push pickName
       # delete one that not used
-      oldFiles.map (name) ->
-        unless (md5List.some (md5) -> matchName name, md5)
-          oldPathname = path.join item.dest, name
+      oldBasenameList.map (givenBasename) ->
+        unless givenBasename in currentBasenameList
+          oldPathname = path.join item.dest, givenBasename
           grunt.log.warn 'removing old file: "%s"', oldPathname
           grunt.file.delete oldPathname
