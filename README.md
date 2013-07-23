@@ -22,13 +22,6 @@ npm install --save deploy-with-md5
 module.exports = (grunt) ->
 
   options =
-    coffee:
-      compile:
-        options:
-          bare: yes
-          watch: yes
-        files:
-          'tasks/copy.js': 'coffee/copy.coffee'
     'deploy-with-md5':
       demo:
         files:
@@ -38,14 +31,12 @@ module.exports = (grunt) ->
         ]
 
   grunt.initConfig options
-
-  grunt.loadNpmTasks 'grunt-contrib-coffee'
-
   grunt.task.loadTasks 'tasks'
 
-  grunt.registerTask 'build', ['coffee:compile']
   grunt.registerTask 'test', ['deploy-with-md5:demo']
 ```
+
+You may also read `Gruntfile.coffee` to see how I use it.  
 
 This plugin renames file from `test/src/` to `test/dest` with md5 and timestamps.
 Also it will update the MD5 string in the given HTML files.
