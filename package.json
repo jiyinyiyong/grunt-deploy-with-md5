@@ -1,6 +1,6 @@
 {
   "name": "grunt-deploy-with-md5",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "copy files for CDN and update the time stamps",
   "main": "Gruntfile.coffee",
   "dependencies": {

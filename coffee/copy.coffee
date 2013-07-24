@@ -40,7 +40,7 @@ module.exports = (grunt) ->
         pickPathname = path.join item.dest, pickName
         # if md5 is still there, don't change
         theOldBasepath = oldBasenameList.filter((name) -> matchName name, md5)[0]
-        if theOldBasename?
+        if theOldBasepath?
           oldBasename = path.basename theOldBasepath
           grunt.log.ok 'file "%s" is not modified', oldBasename
           pickName = oldBasename

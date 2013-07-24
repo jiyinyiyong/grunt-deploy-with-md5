@@ -49,7 +49,7 @@ module.exports = function(grunt) {
         theOldBasepath = oldBasenameList.filter(function(name) {
           return matchName(name, md5);
         })[0];
-        if (typeof theOldBasename !== "undefined" && theOldBasename !== null) {
+        if (theOldBasepath != null) {
           oldBasename = path.basename(theOldBasepath);
           grunt.log.ok('file "%s" is not modified', oldBasename);
           pickName = oldBasename;
